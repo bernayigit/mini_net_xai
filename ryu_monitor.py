@@ -107,9 +107,10 @@ class SimpleMonitor13(simple_switch_13.SimpleSwitch13):
                 matrix[mac_to_index[src], mac_to_index[dst]] = stat.byte_count
 
         # Save the matrix to a CSV file with a timestamp
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"traffic_matrix_{timestamp}.csv"
-        self._save_matrix_to_csv(matrix, filename)
+        if np.any(matrix):
+            timestamp = time.strftime("%Y%m%d-%H%M%S")
+            filename = f"traffic_matrix_{timestamp}.csv"
+            self._save_matrix_to_csv(matrix, filename)
 
 
     def _save_matrix_to_csv(self, matrix, filename):
