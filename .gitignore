@@ -1,0 +1,14 @@
+# OS generated files #
+.DS_Store
+.DS_Store?
+__pycache__/
+ryu-venv/
+.ipynb_checkpoints/
+
+# Test codes and files used for debugging #
+Geant.npy
+geant.xml
+Untitled.ipynb
+simpleNet.py 
+ryu_L2.py 
+gnet22.py
