@@ -1,4 +1,4 @@
-from gNet import net
+from net_4_hosts import net
 import numpy as np
 import time
 from mininet.cli import CLI
