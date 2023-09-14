@@ -16,14 +16,14 @@ class GeantMplsTopo( Topo ):
     "Internet Topology Zoo Specimen."
 
     # host list
-    hosts = ['at1_at_host', 'be1_be_host', 'ch1_ch_host', 'cz1_cz_host', 'de1_de_host', 
+    host_list = ['at1_at_host', 'be1_be_host', 'ch1_ch_host', 'cz1_cz_host', 'de1_de_host', 
              'es1_es_host', 'fr1_fr_host', 'gr1_gr_host', 'hr1_hr_host', 'hu1_hu_host', 
              'ie1_ie_host', 'il1_il_host', 'it1_it_host', 'lu1_lu_host', 'nl1_nl_host', 
              'ny1_ny_host', 'pl1_pl_host', 'pt1_pt_host',  'se1_se_host', 'si1_si_host', 
              'sk1_sk_host', 'uk1_uk_host']
     
     # Switches
-    switches = ['at1_at', 'be1_be', 'ch1_ch', 'cz1_cz', 'de1_de', 'es1_es', 'fr1_fr', 'gr1_gr', 'hr1_hr', 
+    switch_list = ['at1_at', 'be1_be', 'ch1_ch', 'cz1_cz', 'de1_de', 'es1_es', 'fr1_fr', 'gr1_gr', 'hr1_hr', 
                 'hu1_hu', 'ie1_ie', 'il1_il', 'it1_it', 'lu1_lu', 'nl1_nl', 'ny1_ny', 'pl1_pl', 
                 'pt1_pt', 'se1_se', 'si1_si', 'sk1_sk', 'uk1_uk']
     
@@ -80,11 +80,11 @@ class GeantMplsTopo( Topo ):
         Topo.__init__( self )
 
         # Add switches and store in a dict for referencing
-        switch_objects = {name: self.addSwitch(f's{i}') for i, name in enumerate(self.switches)}
+        switch_objects = {name: self.addSwitch(f's{i+1}') for i, name in enumerate(self.switch_list)}
 
         # Add hosts and link them to their corresponding switches
         i = 1
-        for switch, _ in zip(self.switches, self.hosts):
+        for switch, _ in zip(self.switch_list, self.host_list):
             host_mac = '00:00:00:00:00:{:02}'.format(i)  # Using integer mac address
             host = self.addHost(f'h{i}', mac=host_mac)
             self.addLink(switch_objects[switch], host)
@@ -92,7 +92,7 @@ class GeantMplsTopo( Topo ):
 
         # Add switch links based on the switch_links list
         for (src_idx, dst_idx) in self.switch_links:
-            self.addLink(switch_objects[self.switches[src_idx]], switch_objects[self.switches[dst_idx]])
+            self.addLink(switch_objects[self.switch_list[src_idx]], switch_objects[self.switch_list[dst_idx]])
 
 TOPOS = {'geant': ( lambda: GeantMplsTopo() ) }
 
@@ -107,3 +107,12 @@ net = Mininet(topo=topo,
 if __name__ == '__main__':
 
     setLogLevel('info')
+
+    print("*** Starting network")
+    net.start()
+
+    print("*** Running CLI")
+    CLI(net)
+
+    print("*** Stopping network")
+    net.stop()

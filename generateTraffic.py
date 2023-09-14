@@ -63,12 +63,14 @@ if __name__ == '__main__':
 
     #traffic_data = np.load('Geant.npy')
     #demands = traffic_data[0]
-    pseudo_demands = [[0.0, 0.0, 12.0, 0.0],
-                      [0.0, 0.0, 0.0, 9.0],
-                      [10.0, 0.0, 0.0, 0.0],
-                      [0.0, 4.0, 0.0, 0.0]]
+    #""""
+    demands = [[0.0, 0.0, 12.0, 0.0],
+               [0.0, 0.0, 0.0, 9.0],
+               [10.0, 0.0, 0.0, 0.0],
+               [0.0, 4.0, 0.0, 0.0]]
+    #"""
     
-    traffic_gen = Generator(net.hosts, pseudo_demands)
+    traffic_gen = Generator(net.hosts, demands)
     traffic_gen.inject_traffic() # Adding traffic
 
     print("*** Running CLI")
