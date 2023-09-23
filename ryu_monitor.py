@@ -6,6 +6,8 @@ from ryu.controller.handler import set_ev_cls
 from ryu.lib import hub
 import numpy as np
 import os
+from CNN import CNN
+from preprocessing import *
 
 class SimpleMonitor13(simple_switch_13.SimpleSwitch13):
 
@@ -129,3 +131,18 @@ class SimpleMonitor13(simple_switch_13.SimpleSwitch13):
             gc.collect()
 
             self.save_dataset = True
+
+        # ML integration and data processing
+        if self.save_dataset:
+            samples = np.load('output/tensor.npy')
+            sc = fit_scaler(samples)
+            samples = scale_data(sc, samples)
+            x, y, tx, ty = process_data(samples, (4,3), [(4,3)])
+
+            cnn = CNN((10,10,1), (4,3))
+            cnn.train(x,y,tx,ty, 'snippets/test_model')
+            sorted_coordinates = cnn.lime(x,tx,'snippets/imp.npy')
+            cnnr = CNN((5,5,1), [(4,3)])
+            selected_coordinates = sorted_coordinates[-25:]
+            xr, yr, txr, tyr = process_data_reduced(samples, (4,3), selected_coordinates)
+            cnnr.train(xr,yr,txr,tyr, 'snippet/test_model_r')
