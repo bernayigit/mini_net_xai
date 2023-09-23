@@ -5,9 +5,9 @@ from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.lib import hub
 import numpy as np
-import csv
-import time
 import os
+from CNN import CNN
+from preprocessing import *
 
 class SimpleMonitor13(simple_switch_13.SimpleSwitch13):
 
@@ -15,7 +15,12 @@ class SimpleMonitor13(simple_switch_13.SimpleSwitch13):
         super(SimpleMonitor13, self).__init__(*args, **kwargs)
         self.datapaths = {}
         self.monitor_thread = hub.spawn(self._monitor)
-        self.counter = 0
+
+        # Initializa a 50 record of 10x10 matrix
+        self.index = 0 # Initialize the matrix index
+        self.n = 100 # Intialize num of rows
+        self.matrix = [np.zeros((10, 10)) for _ in range(self.n)]
+        self.save_dataset = False
 
     @set_ev_cls(ofp_event.EventOFPStateChange,
                 [MAIN_DISPATCHER, DEAD_DISPATCHER])
@@ -74,7 +79,7 @@ class SimpleMonitor13(simple_switch_13.SimpleSwitch13):
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
-        matrix = np.zeros((10, 10))
+        
         body = ev.msg.body
 
         self.logger.info('-------FLOW STATS------')
@@ -103,25 +108,41 @@ class SimpleMonitor13(simple_switch_13.SimpleSwitch13):
             src = stat.match.get('eth_src')
             dst = stat.match.get('eth_dst')
             if src in mac_to_index and dst in mac_to_index:
-                matrix[mac_to_index[src], mac_to_index[dst]] = stat.byte_count
+                # Keeping the index atmost n
+                if self.index < self.n:
+                    self.matrix[self.index][mac_to_index[src], mac_to_index[dst]] = stat.byte_count
      
-        if self.counter < 100:
-            # Save the matrix to a CSV file with a timestamp
-            if np.any(matrix):
-                timestamp = time.strftime("%Y%m%d-%H%M%S")
-                filename = f"output/traffic_matrix_{timestamp}_{self.counter}.csv"
+        # Check if each row of the current matrix has at least one non-zero value
+        all_rows_have_nonzero = all(np.any(row) for row in self.matrix[self.index])
 
-                # Check that the output directory exist
-                if not os.path.exists('output'):
-                    os.makedirs('output')
-                    
-                self._save_matrix_to_csv(matrix, filename)
-                self.counter += 1
-        else:
-            pass
+        if all_rows_have_nonzero:
+            # Increment the index
+            self.index += 1
 
-    def _save_matrix_to_csv(self, matrix, filename):
-        with open(filename, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            for row in matrix:
-                writer.writerow(row)
+        # If all matrices have been filled (at least partially), save the tensor
+        if self.index == self.n and not self.save_dataset:
+            if not os.path.exists('output'):
+                os.makedirs('output')
+            np.save('output/tensor.npy', self.matrix)
+
+            # Memory management
+            self.matrix = None
+            import gc
+            gc.collect()
+
+            self.save_dataset = True
+
+        # ML integration and data processing
+        if self.save_dataset:
+            samples = np.load('output/tensor.npy')
+            sc = fit_scaler(samples)
+            samples = scale_data(sc, samples)
+            x, y, tx, ty = process_data(samples, (4,3), [(4,3)])
+
+            cnn = CNN((10,10,1), (4,3))
+            cnn.train(x,y,tx,ty, 'snippets/test_model')
+            sorted_coordinates = cnn.lime(x,tx,'snippets/imp.npy')
+            cnnr = CNN((5,5,1), [(4,3)])
+            selected_coordinates = sorted_coordinates[-25:]
+            xr, yr, txr, tyr = process_data_reduced(samples, (4,3), selected_coordinates)
+            cnnr.train(xr,yr,txr,tyr, 'snippet/test_model_r')
