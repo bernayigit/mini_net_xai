@@ -16,7 +16,7 @@ class SimpleMonitor13(simple_switch_13.SimpleSwitch13):
         self.datapaths = {}
         self.monitor_thread = hub.spawn(self._monitor)
 
-        # Initializa a 50 record of 10x10 matrix
+        # Initializa a 100 record of 10x10 matrix
         self.index = 0 # Initialize the matrix index
         self.n = 100 # Intialize num of rows
         self.matrix = [np.zeros((10, 10)) for _ in range(self.n)]
