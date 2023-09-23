@@ -13,10 +13,23 @@ class Generator:
     def __init__(self, hosts, duration=10):
         self.hosts = hosts
         self.duration = duration
+        self.demand = self.initialize_demand()
 
-        # Create a 10 x 10 demand matrix
-        self.demand = [[random.uniform(1, 9) if i != j else 0.0 for j in range(len(hosts))] for i in range(len(hosts))]
-
+    def initialize_demand(self):
+        # Create a 10 x 10 demand matrix.
+        # Each value is rounded to 4 decimal place
+        return [[round(random.uniform(1, 9), 4) if i != j else 0.0 \
+                 for j in range(len(self.hosts))] for i in range(len(self.hosts))]
+    
+    def update_demand(self):
+        # Make the next demand a function of the previous one.
+        # Here we add a small random noise to the previous demand.
+        for i in range(len(self.hosts)):
+            for j in range(len(self.hosts)):
+                if i != j:
+                    noise = round(random.uniform(-2.5, 2.5), 4)
+                    self.demand[i][j] = max(0, self.demand[i][j] + noise) # Ensuring that demand stays non-negative
+    
     def start_iperf(self):
         
         print('Starting iPerf on all hosts')
@@ -43,6 +56,7 @@ class Generator:
                         # Use iperf to generate traffic
                         src.cmd(f"iperf -c {dst.IP()} -t {self.duration} -b {bandwidth_mbps}M &")
 
+        self.update_demand()
         time.sleep(5)
 
 # Driver code
@@ -58,8 +72,6 @@ if __name__ == '__main__':
     for i in range(100):
         traffic_gen.inject_traffic()
         print(f'traffic {i} injected')
-
-    traffic_gen.inject_traffic()
     
     traffic_gen.stop_iperf()
     print("*** Running CLI")
