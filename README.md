@@ -1,9 +1,12 @@
 # Overview
-This application simulates a mini-network nodes namely: __(h1, h2, h3, and h4)__. These nodes are connected to a remote 
+This application simulates a mini-network nodes namely: __(h1, h2, h3, ... h10)__. These nodes are connected to a remote 
 SDN (Software Defined Networking) controller. The network is constructed using Mininet and Ryu. Specifically:
 
-* Nodes h1 and h3 are directly connected via OVSwitches.
-* Nodes h2 and h4 are directly connected via OVSwitches.
+* Nodes h1 and h2 are directly connected via OVSwitches.
+* Nodes h3 and h4 are directly connected via OVSwitches.
+* Nodes h5 and h6 are directly connected via OVSwitches.
+* Nodes h7 and h8 are directly connected via OVSwitches.
+* Nodes h9 and h10 are directly connected via OVSwitches.
 
 The primary objective of this application is to generate a traffic matrix from the SDN controller, capturing the traffic 
 flows between the end nodes or hosts.
@@ -25,12 +28,12 @@ ryu-manager ryu_monitor.py
 2. **Generate Traffic:**
 In a new terminal, execute the ```generateTraffic.py``` script.
 ```
-sudo python generateTraffic.py
+sudo python generateRandomTraffic.py
 ```
 **Note: Mininet requires root privileges, hence the use of ```sudo``` on Linux systems.
 
 # Output
-Upon successful execution, the Ryu controller will generate CSV files named ```traffic_matrix_XXX.csv``` in the root directory. 
+Upon successful execution, the Ryu controller will generate .NPY files named ```output/tensor.npy``` in the root directory. 
 Each file represents the traffic matrix at a given time, captured at 10-second intervals. To prevent continuous generation of CSV 
 files, ensure you stop the ```ryu_monitor.py``` script.
 
